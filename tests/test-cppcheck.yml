@@ -1,0 +1,22 @@
+name: Test cppcheck installation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: setup
+        uses: .
+        with:
+          cppcheck: "true"
+      - name: Assert cppcheck is installed
+        run: |
+          echo "Checking cppcheck installation..."
+          if ! command -v cppcheck &>/dev/null; then
+            echo "FAIL: cppcheck not found in PATH"
+            exit 1
+          fi
+          CPPCHECK_VERSION=$(cppcheck --version)
+          echo "cppcheck version: $CPPCHECK_VERSION"
+          echo "PASS: cppcheck is installed"

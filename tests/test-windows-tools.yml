@@ -1,0 +1,19 @@
+name: Test Windows tool inputs
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          msvc: "false"
+          cl: "false"
+          msbuild: "false"
+          visualstudio: "false"
+          vcvarsall: "false"
+      - name: Assert action ran without error
+        run: |
+          echo "PASS: Windows tool inputs accepted"

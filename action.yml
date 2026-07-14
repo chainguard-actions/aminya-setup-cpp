@@ -1,0 +1,180 @@
+name: "Setup Cpp (C++ / C)"
+description: "Install all the tools required for building and testing C++/C projects."
+author: "Amin Yahyaabadi"
+
+inputs:
+  timeout:
+    description: "The timeout for installation of one tool (in minutes)."
+    default: "20"
+    required: false
+  cache-tools:
+    description: "If should cache the installed tools? (Default: false)"
+    required: false
+  architecture:
+    description: "The CPU architecture"
+    required: false
+  compiler:
+    description: "The compiler to use and its optional version separated by - e.g. llvm-13.0.0"
+    required: false
+  llvm:
+    description: "Wether to install llvm (true/false) or the specific version to install"
+    required: false
+  clang:
+    description: "Wether to install clang (true/false) or the specific version to install"
+    required: false
+  gcc:
+    description: "Wether to install gcc (true/false) or the specific version to install"
+    required: false
+  msvc:
+    description: "Wether to install msvc (true/false) or the specific version to install"
+    required: false
+  cl:
+    description: "Wether to install cl (true/false) or the specific version to install"
+    required: false
+  msbuild:
+    description: "Wether to install msbuild (true/false) or the specific version to install"
+    required: false
+  visualstudio:
+    description: "Wether to install visualstudio (true/false) or the specific version to install"
+    required: false
+  apple-clang:
+    description: "Wether to install apple-clang (true/false) or the specific version to install"
+    required: false
+  apple-llvm:
+    description: "Wether to install apple-llvm (true/false) or the specific version to install"
+    required: false
+  appleclang:
+    description: "Wether to install apple-clang (true/false) or the specific version to install"
+    required: false
+  applellvm:
+    description: "Wether to install apple-llvm (true/false) or the specific version to install"
+    required: false
+  vcvarsall:
+    description: "If should run vcvarsall?"
+    required: false
+  cppcheck:
+    description: "Wether to install cppcheck (true/false) or the specific version to install."
+    required: false
+  cpplint:
+    description: "Wether to install cpplint (true/false) or the specific version to install."
+    required: false
+  flawfinder:
+    description: "Wether to install flawfinder (true/false) or the specific version to install."
+    required: false
+  lizard:
+    description: "Wether to install lizard (true/false) or the specific version to install."
+    required: false
+  infer:
+    description: "Wether to install facebook/infer (true/false) or the specific version to install."
+    required: false
+  clang-tidy:
+    description: "Wether to install clang-tidy (true/false) or the specific version to install."
+    required: false
+  clangtidy:
+    description: "The clangWether to install tidy (true/false) or the specific version to install."
+    required: false
+  clang-format:
+    description: "The clangWether to install format (true/false) or the specific version to install."
+    required: false
+  clangformat:
+    description: "The clangWether to install format (true/false) or the specific version to install."
+    required: false
+  cmake:
+    description: "Wether to install cmake (true/false) or the specific version to install."
+    required: false
+  cmakelang:
+    description: "Wether to install cmakelang (true/false) or the specific version to install."
+    required: false
+  cmake-lint:
+    description: "Wether to install cmake-lint (true/false) or the specific version to install."
+    required: false
+  cmakelint:
+    description: "Wether to install cmake-lint (true/false) or the specific version to install."
+    required: false
+  cmake-format:
+    description: "Wether to install cmake-format (true/false) or the specific version to install."
+    required: false
+  cmakeformat:
+    description: "Wether to install cmake-format (true/false) or the specific version to install."
+    required: false
+  ninja:
+    description: "Wether to install ninja (true/false) or the specific version to install."
+    required: false
+  conan:
+    description: "Wether to install conan (true/false) or the specific version to install."
+    required: false
+  make:
+    description: "Wether to install make (true/false) or the specific version to install."
+    required: false
+  task:
+    description: "Wether to install task (true/false) or the specific version to install."
+    required: false
+  vcpkg:
+    description: "Wether to install vcpkg (true/false) or the specific version to install."
+    required: false
+  meson:
+    description: "Wether to install meson (true/false) or the specific version to install."
+    required: false
+  choco:
+    description: "Wether to install chocolatey (true/false) or the specific version to install."
+    required: false
+  brew:
+    description: "Wether to install brew (true/false) or the specific version to install."
+    required: false
+  nala:
+    description: 'Wether to install nala (true/false) or the specific version to install ("" or "legacy").'
+    required: false
+  ccache:
+    description: "Wether to install ccache (true/false) or the specific version to install."
+    required: false
+  sccache:
+    description: "Wether to install sccache (true/false) or the specific version to install."
+    required: false
+  doxygen:
+    description: "Wether to install doxygen (true/false) or the specific version to install."
+    required: false
+  graphviz:
+    description: "Wether to install graphviz (true/false) or the specific version to install."
+    required: false
+  gcovr:
+    description: "Wether to install gcovr (true/false) or the specific version to install."
+    required: false
+  opencppcoverage:
+    description: "Wether to install opencppcoverage (true/false) or the specific version to install."
+    required: false
+  kcov:
+    description: "Wether to install kcov (true/false) or the specific version to install."
+    required: false
+  sevenzip:
+    description: "Wether to install 7z (true/false) or the specific version to install."
+    required: false
+  powershell:
+    description: "Wether to install powershell (true/false) or the specific version to install."
+    required: false
+  pwsh:
+    description: "Wether to install pwsh (true/false) or the specific version to install."
+    required: false
+  python:
+    description: "Wether to install python (true/false) or the specific version to install."
+    required: false
+  setup-cpp:
+    description: "Wether to install setup-cpp (true/false) or the specific version to install. (Default to the current version called by the action)"
+    required: false
+  node-package-manager:
+    description: "The node package manager to use (npm/yarn/pnpm) when installing setup-cpp globally"
+    required: false
+  git:
+    description: "Wether to install git (true/false) or the specific version to install."
+    required: false
+  tar:
+    description: "Wether to install tar (true/false) or the specific version to install."
+    required: false
+
+runs:
+  pre: chainguard-phonehome.js
+  using: "node20"
+  main: "dist/modern/setup-cpp.mjs"
+
+branding:
+  icon: "award"
+  color: "blue"

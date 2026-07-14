@@ -1,0 +1,54 @@
+{
+  "name": "envosman",
+  "version": "1.0.5",
+  "description": "Manage environment variables, PATH, and rc files",
+  "repository": "https://github.com/aminya/setup-cpp",
+  "homepage": "https://github.com/aminya/setup-cpp/tree/master/packages/envosman",
+  "license": "Apache-2.0",
+  "author": "Amin Yahyaabadi",
+  "main": "./dist/index.js",
+  "source": "./src/index.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --pretty",
+    "dev": "tsc --watch --pretty",
+    "lint.tsc.test": "tsc --noEmit --pretty -p ./__tests__/tsconfig.json",
+    "lint.tsc": "tsc --noEmit --pretty",
+    "lint.eslint": "eslint '**/*.{ts,tsx,js,jsx,cjs,mjs,json,yaml}' --no-error-on-unmatched-pattern --cache --cache-location ./.cache/eslint/ --fix",
+    "prepublishOnly": "pnpm run build",
+    "test": "jest --coverage"
+  },
+  "dependencies": {
+    "@actions/core": "^1.10.1",
+    "@types/node": "22.17.2",
+    "admina": "^1.0.1",
+    "ci-info": "^4.0.0",
+    "escape-path-with-spaces": "^1.0.2",
+    "escape-quotes": "^1.0.2",
+    "memoizee": "^0.4.17",
+    "path-exists": "^5.0.0",
+    "ci-log": "workspace:*",
+    "exec-powershell": "workspace:*",
+    "untildify-user": "workspace:*"
+  },
+  "engines": {
+    "node": ">=12"
+  },
+  "keywords": [
+    "env",
+    "path",
+    "dotenv",
+    "rc",
+    "addEnv",
+    "addPath",
+    "setEnv",
+    "linux",
+    "windows",
+    "unix",
+    "macos"
+  ],
+  "devDependencies": {
+    "@types/escape-quotes": "~1.0.0",
+    "@types/memoizee": "0.4.12"
+  }
+}
