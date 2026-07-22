@@ -9,6 +9,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | Version | Tag | Upstream commit |
 |---------|-----|-----------------|
 | v1.8.0 | [`v1.8.0`](https://github.com/chainguard-actions/aminya-setup-cpp/tree/v1.8.0) | [`1f17f92`](https://github.com/aminya/setup-cpp/commit/1f17f92d6a52bfcb1a25348e2c526c2e5cbb1134) |
+| v1.8.1 | [`v1.8.1`](https://github.com/chainguard-actions/aminya-setup-cpp/tree/v1.8.1) | [`8170d66`](https://github.com/aminya/setup-cpp/commit/8170d66c458f4a045220b7b0966c10940bb2a15d) |
 
 ## Privacy
 
