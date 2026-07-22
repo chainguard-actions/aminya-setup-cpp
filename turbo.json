@@ -1,0 +1,30 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalEnv": ["OS", "RUNNER_OS", "NODE_ENV"],
+  "cacheDir": ".cache/turbo",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"]
+    },
+    "dev": {
+      "persistent": true,
+      "cache": false
+    },
+    "lint.tsc": {
+      "dependsOn": ["build", "^lint.tsc", "lint.tsc.test"]
+    },
+    "lint.tsc.test": {
+      "dependsOn": ["^lint.tsc.test"]
+    },
+    "lint.eslint": {
+      "dependsOn": ["^lint.eslint"]
+    },
+    "lint": {
+      "dependsOn": ["lint.tsc", "lint.eslint"]
+    },
+    "test": {
+      "dependsOn": ["build", "^test"]
+    }
+  },
+  "ui": "stream"
+}

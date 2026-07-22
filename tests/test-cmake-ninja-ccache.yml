@@ -1,0 +1,41 @@
+name: Test cmake, ninja, and ccache installation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: setup
+        uses: .
+        with:
+          cmake: "true"
+          ninja: "true"
+          ccache: "true"
+      - name: Assert cmake is installed
+        run: |
+          echo "cmake version:"
+          cmake --version
+          if ! cmake --version; then
+            echo "FAIL: cmake not found or not working"
+            exit 1
+          fi
+          echo "PASS: cmake is installed"
+      - name: Assert ninja is installed
+        run: |
+          echo "ninja version:"
+          ninja --version
+          if ! ninja --version; then
+            echo "FAIL: ninja not found or not working"
+            exit 1
+          fi
+          echo "PASS: ninja is installed"
+      - name: Assert ccache is installed
+        run: |
+          echo "ccache version:"
+          ccache --version
+          if ! ccache --version; then
+            echo "FAIL: ccache not found or not working"
+            exit 1
+          fi
+          echo "PASS: ccache is installed"

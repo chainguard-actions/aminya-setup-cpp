@@ -1,0 +1,31 @@
+name: Test coverage and visualization tools
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          gcovr: "true"
+          graphviz: "true"
+          infer: "false"
+          kcov: "false"
+      - name: Assert gcovr is installed
+        run: |
+          echo "Checking gcovr installation"
+          if ! command -v gcovr &>/dev/null; then
+            echo "FAIL: gcovr not found"
+            exit 1
+          fi
+          echo "PASS: gcovr found"
+      - name: Assert graphviz is installed
+        run: |
+          echo "Checking graphviz (dot) installation"
+          if ! command -v dot &>/dev/null; then
+            echo "FAIL: graphviz dot not found"
+            exit 1
+          fi
+          echo "PASS: graphviz found"

@@ -1,0 +1,21 @@
+name: Test cmake installation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: setup
+        uses: .
+        with:
+          cmake: "true"
+      - name: Assert cmake is installed
+        run: |
+          echo "cmake version:"
+          cmake --version
+          if ! cmake --version; then
+            echo "FAIL: cmake not found or not working"
+            exit 1
+          fi
+          echo "PASS: cmake is installed"

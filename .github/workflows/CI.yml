@@ -1,0 +1,622 @@
+name: CI
+on:
+  pull_request:
+  push:
+    tags:
+      - "*"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+permissions: {}
+
+env:
+  NODE_OPTIONS: --enable-source-maps
+  version: "1.8.1"
+
+jobs:
+  Build:
+    runs-on: ${{ matrix.os }}
+    name: Build
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-22.04
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      - name: Setup Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: "./.nvmrc"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version-file: "package.json"
+
+      - name: Install
+        run: |
+          bun install
+
+      - name: Build
+        run: |
+          bun run build
+          bun run build.docker-ci
+
+      - name: Lint
+        run: |
+          bun run test.lint
+
+      - name: Update Dist
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [ "$(git diff --ignore-space-at-eol --text dist/ | wc -l)" -gt "0" ]; then
+            if [[ "$REF_NAME" =~ ^refs/heads/ ]]; then
+              git config user.name "github-actions[bot]"
+              git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+              git add dist/
+              git commit -m "chore(build): update dist"
+              git push
+            else
+              echo "Skipping push for non-branch commit"
+            fi
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Dist
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        if: always()
+        with:
+          name: dist
+          path: |
+            ./dist
+            ./packages/*/dist
+            ./dev/docker/__tests__/
+          retention-days: 1
+
+  BuildExecutable:
+    name: Build-Executable-${{ matrix.os }}
+    needs: [Build]
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - windows-2022
+          - ubuntu-22.04
+          - ubuntu-22.04-arm
+          - macos-15-intel # x64
+          - macos-14 # arm64
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: dist
+
+      - name: Setup Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: "./.nvmrc"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version-file: "package.json"
+
+      - name: Cache node_modules
+        if: ${{ !contains(matrix.os, 'windows') }}
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: |
+            ~/.bun
+            ./node_modules
+          key: "setupcpp-node_modules-cache-OS:${{ matrix.os }}-${{ hashFiles('./.npmrc', './package.json', './.nvmrc', './bun.lock') }}"
+          restore-keys: |
+            "setupcpp-node_modules-cache-OS:${{ matrix.os }}-"
+
+      - name: Cache Turbo
+        uses: rharkor/caching-for-turbo@a1c4079258ae08389be75b57d4d7a70f23c1c66d # v1.8
+
+      - name: Cache .cache
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: |
+            ./.cache/eslint
+            ./.cache/cspell
+            /home/runner/.cache/dprint
+          key: "setupcpp-cache-OS:${{ matrix.os }}-${{ hashFiles('./*.json', './.*rc', './*.yml') }}"
+          restore-keys: |
+            "setupcpp-cache-OS:${{ matrix.os }}-"
+
+      - name: Install
+        run: |
+          bun install
+
+      # Create self-contained executable that bundles Nodejs
+      - name: Create Executable
+        run: |
+          bun run pack.exe
+
+      - name: Upload Executables
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: exe-${{ matrix.os }}
+          path: |
+            ./exe
+          retention-days: 7
+
+  Test:
+    name: Test-${{ matrix.os }}
+    needs: [Build]
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - windows-2022
+          - ubuntu-24.04-arm
+          - ubuntu-24.04
+          - ubuntu-22.04-arm
+          - ubuntu-22.04
+          # - ubuntu-20.04
+          - macos-15 # arm64
+          # - macos-15-large # x64
+          - macos-14 # arm64
+          - macos-15-intel # x64
+          # - macos-14-xlarge #arm64
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          submodules: true
+
+      - name: Download Dist
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: dist
+
+      - name: Setup Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: "./.nvmrc"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version-file: "package.json"
+
+      - name: Cache node_modules
+        if: ${{ !contains(matrix.os, 'windows') }}
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: |
+            ~/.bun
+            ./node_modules
+          key: "setupcpp-node_modules-cache-OS:${{ matrix.os }}-${{ hashFiles('./.npmrc', './package.json', './.nvmrc', './bun.lock') }}"
+          restore-keys: |
+            "setupcpp-node_modules-cache-OS:${{ matrix.os }}-"
+
+      - name: Install
+        run: |
+          bun install
+
+      # - name: Setup SSH debugging session
+      #   uses: mxschmitt/action-tmate@v3
+
+      - name: Tests
+        if: ${{ !contains(github.event.head_commit.message, '[skip test]') }}
+        run: |
+          bun run test
+        env:
+          RUNNER_OS_NAME: ${{ matrix.os }}
+
+      - name: Setup Node 20
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 20
+
+      - name: Smoke Test Modern Bundle
+        if: ${{ !contains(github.event.head_commit.message, '[skip test]') }}
+        run: |
+          node ./dist/modern/setup-cpp.mjs --help
+          node ./dist/modern/setup-cpp.mjs --gcc true --cmake true
+        env:
+          RUNNER_OS_NAME: ${{ matrix.os }}
+
+      - name: Smoke Test Global Install
+        if: ${{ !contains(github.event.head_commit.message, '[skip test]') }}
+        run: |
+          setup-cpp --help
+
+      - name: Setup Node 12
+        if: ${{ !contains(matrix.os, 'macos-14') && !contains(matrix.os, 'macos-15') }}
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 12
+      - name: Smoke Test Legacy Bundle
+        run: |
+          node ./dist/legacy/setup-cpp.js --help
+          node ./dist/legacy/setup-cpp.js --gcc true --cmake true
+
+  Docker:
+    name: Docker-${{ matrix.container.image }}-${{ matrix.platform }}-${{ matrix.container.tag }}
+    needs: [Build]
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-24.04
+        platform:
+          - linux/amd64
+        container:
+          - { distro: "ubuntu", image: "setup-cpp-ubuntu", tag: "24.04" }
+          - { distro: "ubuntu", image: "setup-cpp-ubuntu", tag: "22.04" }
+          - { distro: "ubuntu", image: "setup-cpp-ubuntu", tag: "20.04" }
+          - { distro: "fedora", image: "setup-cpp-fedora", tag: "44" }
+          - { distro: "arch", image: "setup-cpp-arch", tag: "base" }
+          - { distro: "alpine", image: "setup-cpp-alpine", tag: "3.21", base_version: "22-alpine3.21" }
+        include:
+          - os: ubuntu-24.04-arm
+            platform: linux/arm64
+            container: { distro: "ubuntu", image: "setup-cpp-ubuntu", tag: "24.04" }
+          - os: ubuntu-24.04-arm
+            platform: linux/arm64
+            container: { distro: "ubuntu", image: "setup-cpp-ubuntu", tag: "22.04" }
+          - os: ubuntu-24.04-arm
+            platform: linux/arm64
+            container: { distro: "ubuntu", image: "setup-cpp-ubuntu", tag: "20.04" }
+          - os: ubuntu-24.04-arm
+            platform: linux/arm64
+            container: { distro: "alpine", image: "setup-cpp-alpine", tag: "3.21", base_version: "22-alpine3.21" }
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          submodules: true
+
+      - name: Download Dist
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: dist
+
+      - name: Define Platform Suffix
+        id: platform
+        env:
+          MATRIX_PLATFORM: ${{ matrix.platform }}
+        run: |
+          if [[ "$MATRIX_PLATFORM" == "linux/amd64" ]]; then
+            safe_suffix="amd64"
+          else
+            safe_suffix="arm64"
+          fi
+          printf 'suffix=%s\n' "$safe_suffix" >> "$GITHUB_OUTPUT"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        if: ${{ github.event_name != 'pull_request' || contains(github.event.head_commit.message, '[push docker]') }}
+        with:
+          username: aminya
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build setup-cpp-${{matrix.container.distro }}
+        id: build_base
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: ./dev/docker/ci/${{ matrix.container.distro }}.dockerfile
+          push: ${{ github.event_name != 'pull_request' || contains(github.event.head_commit.message, '[push docker]') }}
+          load: true
+          provenance: false
+          platforms: ${{ matrix.platform }}
+          tags: aminya/${{ matrix.container.image }}:${{ matrix.container.tag }}-${{ env.version }}-${{ steps.platform.outputs.suffix }}
+          cache-from: type=registry,ref=aminya/${{ matrix.container.image }}:${{ matrix.container.tag }}-${{ env.version }}-${{ steps.platform.outputs.suffix }}
+          cache-to: type=inline
+          build-args: BASE_VERSION=${{ matrix.container.base_version || matrix.container.tag }}
+
+      - name: Tag latest locally
+        env:
+          CONTAINER_IMAGE: ${{ matrix.container.image }}
+          CONTAINER_TAG: ${{ matrix.container.tag }}
+          PLATFORM_SUFFIX: ${{ steps.platform.outputs.suffix }}
+          APP_VERSION: ${{ env.version }}
+        run: |
+          docker tag "aminya/${CONTAINER_IMAGE}:${CONTAINER_TAG}-${APP_VERSION}-${PLATFORM_SUFFIX}" "aminya/${CONTAINER_IMAGE}:latest"
+          docker tag "aminya/${CONTAINER_IMAGE}:${CONTAINER_TAG}-${APP_VERSION}-${PLATFORM_SUFFIX}" "aminya/${CONTAINER_IMAGE}:${CONTAINER_TAG}"
+
+      - name: Push latest to Docker Hub
+        if: ${{ github.event_name != 'pull_request' && matrix.container.distro != 'ubuntu' && matrix.container.distro != 'alpine' }}
+        env:
+          CONTAINER_IMAGE: ${{ matrix.container.image }}
+          CONTAINER_TAG: ${{ matrix.container.tag }}
+        run: |
+          docker push "aminya/${CONTAINER_IMAGE}:latest"
+          docker push "aminya/${CONTAINER_IMAGE}:${CONTAINER_TAG}"
+
+      - name: Docker Readme for setup-cpp-${{matrix.container.distro }}
+        if: ${{ github.event_name != 'pull_request' || contains(github.event.head_commit.message, '[push docker]') }}
+        uses: peter-evans/dockerhub-description@1b9a80c056b620d92cedb9d9b5a223409c68ddfa # v5
+        with:
+          username: aminya
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: aminya/${{ matrix.container.image }}
+          readme-filepath: ./README_DOCKER.md
+
+      - name: Build setup-cpp-${{matrix.container.distro }}-llvm
+        id: build_llvm
+        if: ${{ matrix.container.distro != 'arch' }}
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: ./dev/docker/ci/${{ matrix.container.distro }}-llvm.dockerfile
+          push: ${{ github.event_name != 'pull_request' || contains(github.event.head_commit.message, '[push docker]') }}
+          load: true
+          provenance: false
+          platforms: ${{ matrix.platform }}
+          tags: aminya/${{ matrix.container.image }}-llvm:${{ matrix.container.tag }}-${{ env.version }}-${{ steps.platform.outputs.suffix }}
+          cache-from: type=registry,ref=aminya/${{ matrix.container.image }}-llvm:${{ matrix.container.tag }}-${{ env.version }}-${{ steps.platform.outputs.suffix }}
+          cache-to: type=inline
+
+      - name: Tag latest locally
+        if: ${{ matrix.container.distro != 'arch' }}
+        env:
+          CONTAINER_IMAGE: ${{ matrix.container.image }}
+          CONTAINER_TAG: ${{ matrix.container.tag }}
+          PLATFORM_SUFFIX: ${{ steps.platform.outputs.suffix }}
+          APP_VERSION: ${{ env.version }}
+        run: |
+          docker tag "aminya/${CONTAINER_IMAGE}-llvm:${CONTAINER_TAG}-${APP_VERSION}-${PLATFORM_SUFFIX}" "aminya/${CONTAINER_IMAGE}-llvm:latest"
+          docker tag "aminya/${CONTAINER_IMAGE}-llvm:${CONTAINER_TAG}-${APP_VERSION}-${PLATFORM_SUFFIX}" "aminya/${CONTAINER_IMAGE}-llvm:${CONTAINER_TAG}"
+
+      - name: Push latest to Docker Hub
+        if: ${{ github.event_name != 'pull_request' && matrix.container.distro != 'ubuntu' && matrix.container.distro != 'alpine' && matrix.container.distro != 'arch' }}
+        env:
+          CONTAINER_IMAGE: ${{ matrix.container.image }}
+          CONTAINER_TAG: ${{ matrix.container.tag }}
+        run: |
+          docker push "aminya/${CONTAINER_IMAGE}-llvm:latest"
+          docker push "aminya/${CONTAINER_IMAGE}-llvm:${CONTAINER_TAG}"
+
+      - name: Docker Readme for setup-cpp-${{matrix.container.distro }}-llvm
+        if: ${{ (github.event_name != 'pull_request' || contains(github.event.head_commit.message, '[push docker]')) && matrix.container.distro != 'arch' }}
+        uses: peter-evans/dockerhub-description@1b9a80c056b620d92cedb9d9b5a223409c68ddfa # v5
+        with:
+          username: aminya
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: aminya/${{ matrix.container.image }}-llvm
+          readme-filepath: ./README_DOCKER.md
+
+      - name: Test LLVM
+        if: ${{ !contains(github.event.head_commit.message, '[skip test]') && matrix.container.distro != 'arch' }}
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: ./dev/docker/examples/${{ matrix.container.distro }}-llvm.dockerfile
+          push: false
+          platforms: ${{ matrix.platform }}
+          tags: aminya/test-${{ matrix.container.image }}-llvm:${{ matrix.container.tag }}-${{ env.version }}
+
+      - name: Build setup-cpp-${{matrix.container.distro }}-gcc
+        id: build_gcc
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: ./dev/docker/ci/${{ matrix.container.distro }}-gcc.dockerfile
+          push: ${{ github.event_name != 'pull_request' || contains(github.event.head_commit.message, '[push docker]') }}
+          load: true
+          provenance: false
+          platforms: ${{ matrix.platform }}
+          tags: aminya/${{ matrix.container.image }}-gcc:${{ matrix.container.tag }}-${{ env.version }}-${{ steps.platform.outputs.suffix }}
+          cache-from: type=registry,ref=aminya/${{ matrix.container.image }}-gcc:${{ matrix.container.tag }}-${{ env.version }}-${{ steps.platform.outputs.suffix }}
+          cache-to: type=inline
+
+      - name: Tag latest locally
+        env:
+          CONTAINER_IMAGE: ${{ matrix.container.image }}
+          CONTAINER_TAG: ${{ matrix.container.tag }}
+          PLATFORM_SUFFIX: ${{ steps.platform.outputs.suffix }}
+          APP_VERSION: ${{ env.version }}
+        run: |
+          docker tag "aminya/${CONTAINER_IMAGE}-gcc:${CONTAINER_TAG}-${APP_VERSION}-${PLATFORM_SUFFIX}" "aminya/${CONTAINER_IMAGE}-gcc:latest"
+          docker tag "aminya/${CONTAINER_IMAGE}-gcc:${CONTAINER_TAG}-${APP_VERSION}-${PLATFORM_SUFFIX}" "aminya/${CONTAINER_IMAGE}-gcc:${CONTAINER_TAG}"
+
+      - name: Push latest to Docker Hub
+        if: ${{ github.event_name != 'pull_request' && matrix.container.distro != 'ubuntu' && matrix.container.distro != 'alpine' }}
+        env:
+          CONTAINER_IMAGE: ${{ matrix.container.image }}
+          CONTAINER_TAG: ${{ matrix.container.tag }}
+        run: |
+          docker push "aminya/${CONTAINER_IMAGE}-gcc:latest"
+          docker push "aminya/${CONTAINER_IMAGE}-gcc:${CONTAINER_TAG}"
+
+      - name: Docker Readme for setup-cpp-${{matrix.container.distro }}-gcc
+        if: ${{ github.event_name != 'pull_request' || contains(github.event.head_commit.message, '[push docker]') }}
+        uses: peter-evans/dockerhub-description@1b9a80c056b620d92cedb9d9b5a223409c68ddfa # v5
+        with:
+          username: aminya
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: aminya/${{ matrix.container.image }}-gcc
+          readme-filepath: ./README_DOCKER.md
+
+      - name: Test gcc
+        if: ${{ !contains(github.event.head_commit.message, '[skip test]') }}
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: ./dev/docker/examples/${{ matrix.container.distro }}-gcc.dockerfile
+          push: false
+          platforms: ${{ matrix.platform }}
+          tags: aminya/test-${{ matrix.container.image }}-gcc:${{ matrix.container.tag }}-${{ env.version }}
+
+      - name: Build setup-cpp-${{matrix.container.distro }}-mingw
+        id: build_mingw
+        if: ${{ matrix.container.distro != 'fedora' && !(matrix.container.distro == 'alpine' && matrix.platform == 'linux/arm64') }}
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: ./dev/docker/ci/${{ matrix.container.distro }}-mingw.dockerfile
+          push: ${{ github.event_name != 'pull_request' || contains(github.event.head_commit.message, '[push docker]') }}
+          load: true
+          provenance: false
+          platforms: ${{ matrix.platform }}
+          tags: aminya/${{ matrix.container.image }}-mingw:${{ matrix.container.tag }}-${{ env.version }}-${{ steps.platform.outputs.suffix }}
+          cache-from: type=registry,ref=aminya/${{ matrix.container.image }}-mingw:${{ matrix.container.tag }}-${{ env.version }}-${{ steps.platform.outputs.suffix }}
+          cache-to: type=inline
+
+      - name: Tag latest locally
+        if: ${{ matrix.container.distro != 'fedora' && !(matrix.container.distro == 'alpine' && matrix.platform == 'linux/arm64') }}
+        env:
+          CONTAINER_IMAGE: ${{ matrix.container.image }}
+          CONTAINER_TAG: ${{ matrix.container.tag }}
+          PLATFORM_SUFFIX: ${{ steps.platform.outputs.suffix }}
+          APP_VERSION: ${{ env.version }}
+        run: |
+          docker tag "aminya/${CONTAINER_IMAGE}-mingw:${CONTAINER_TAG}-${APP_VERSION}-${PLATFORM_SUFFIX}" "aminya/${CONTAINER_IMAGE}-mingw:latest"
+          docker tag "aminya/${CONTAINER_IMAGE}-mingw:${CONTAINER_TAG}-${APP_VERSION}-${PLATFORM_SUFFIX}" "aminya/${CONTAINER_IMAGE}-mingw:${CONTAINER_TAG}"
+      - name: Push latest to Docker Hub
+        if: ${{ github.event_name != 'pull_request' && matrix.container.distro != 'ubuntu' && matrix.container.distro != 'fedora' && matrix.container.distro != 'alpine' }}
+        env:
+          CONTAINER_IMAGE: ${{ matrix.container.image }}
+          CONTAINER_TAG: ${{ matrix.container.tag }}
+        run: |
+          docker push "aminya/${CONTAINER_IMAGE}-mingw:latest"
+          docker push "aminya/${CONTAINER_IMAGE}-mingw:${CONTAINER_TAG}"
+
+      - name: Docker Readme for setup-cpp-${{matrix.container.distro }}-mingw
+        if: ${{ github.event_name != 'pull_request' && matrix.container.distro != 'fedora' && !(matrix.container.distro == 'alpine' && matrix.platform == 'linux/arm64') }}
+        uses: peter-evans/dockerhub-description@1b9a80c056b620d92cedb9d9b5a223409c68ddfa # v5
+        with:
+          username: aminya
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: aminya/${{ matrix.container.image }}-mingw
+          readme-filepath: ./README_DOCKER.md
+
+      - name: Test Mingw
+        if: ${{ !contains(github.event.head_commit.message, '[skip test]') && matrix.container.distro != 'fedora' && matrix.container.distro != 'alpine' }}
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          file: ./dev/docker/examples/${{ matrix.container.distro }}-mingw.dockerfile
+          push: false
+          platforms: ${{ matrix.platform }}
+          tags: aminya/test-${{ matrix.container.image }}-mingw:${{ matrix.container.tag }}-${{ env.version }}
+
+  Docker-Manifest:
+    needs: [Docker]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    if: ${{ github.event_name != 'pull_request' || contains(github.event.head_commit.message, '[push docker]') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        container:
+          - { distro: "ubuntu", image: "setup-cpp-ubuntu", tag: "20.04", suffix: "", latest: false }
+          - { distro: "ubuntu", image: "setup-cpp-ubuntu", tag: "20.04", suffix: "-llvm", latest: false }
+          - { distro: "ubuntu", image: "setup-cpp-ubuntu", tag: "20.04", suffix: "-gcc", latest: false }
+          - { distro: "ubuntu", image: "setup-cpp-ubuntu", tag: "20.04", suffix: "-mingw", latest: false }
+
+          - { distro: "ubuntu", image: "setup-cpp-ubuntu", tag: "22.04", suffix: "", latest: false }
+          - { distro: "ubuntu", image: "setup-cpp-ubuntu", tag: "22.04", suffix: "-llvm", latest: false }
+          - { distro: "ubuntu", image: "setup-cpp-ubuntu", tag: "22.04", suffix: "-gcc", latest: false }
+          - { distro: "ubuntu", image: "setup-cpp-ubuntu", tag: "22.04", suffix: "-mingw", latest: false }
+
+          - { distro: "ubuntu", image: "setup-cpp-ubuntu", tag: "24.04", suffix: "", latest: true }
+          - { distro: "ubuntu", image: "setup-cpp-ubuntu", tag: "24.04", suffix: "-llvm", latest: true }
+          - { distro: "ubuntu", image: "setup-cpp-ubuntu", tag: "24.04", suffix: "-gcc", latest: true }
+          - { distro: "ubuntu", image: "setup-cpp-ubuntu", tag: "24.04", suffix: "-mingw", latest: true }
+
+          - { distro: "alpine", image: "setup-cpp-alpine", tag: "3.21", suffix: "", latest: true }
+          - { distro: "alpine", image: "setup-cpp-alpine", tag: "3.21", suffix: "-llvm", latest: true }
+          - { distro: "alpine", image: "setup-cpp-alpine", tag: "3.21", suffix: "-gcc", latest: true }
+          # - { distro: "alpine", image: "setup-cpp-alpine", tag: "3.21", suffix: "-mingw", latest: true }
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          username: aminya
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - uses: Noelware/docker-manifest-action@b33ab348026b120a895167160f5605b0197f0862 # 0.4.3
+        with:
+          inputs: aminya/${{ matrix.container.image }}${{ matrix.container.suffix }}:${{ matrix.container.tag }}-${{ env.version }}
+          images: aminya/${{ matrix.container.image }}${{ matrix.container.suffix }}:${{ matrix.container.tag }}-${{ env.version }}-amd64,aminya/${{ matrix.container.image }}${{ matrix.container.suffix }}:${{ matrix.container.tag }}-${{ env.version }}-arm64
+          push: true
+          amend: true
+
+      - uses: Noelware/docker-manifest-action@b33ab348026b120a895167160f5605b0197f0862 # 0.4.3
+        with:
+          inputs: aminya/${{ matrix.container.image }}${{ matrix.container.suffix }}:${{ matrix.container.tag }}
+          images: aminya/${{ matrix.container.image }}${{ matrix.container.suffix }}:${{ matrix.container.tag }}-${{ env.version }}-amd64,aminya/${{ matrix.container.image }}${{ matrix.container.suffix }}:${{ matrix.container.tag }}-${{ env.version }}-arm64
+          push: true
+          amend: true
+
+      - uses: Noelware/docker-manifest-action@b33ab348026b120a895167160f5605b0197f0862 # 0.4.3
+        if: ${{ matrix.container.latest }}
+        with:
+          inputs: aminya/${{ matrix.container.image }}${{ matrix.container.suffix }}:latest
+          images: aminya/${{ matrix.container.image }}${{ matrix.container.suffix }}:${{ matrix.container.tag }}-${{ env.version }}-amd64,aminya/${{ matrix.container.image }}${{ matrix.container.suffix }}:${{ matrix.container.tag }}-${{ env.version }}-arm64
+          push: true
+          amend: true
+
+  Release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [Build, BuildExecutable, Test]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Download Executables
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          pattern: exe-*
+          path: ./exe/
+          merge-multiple: true
+
+      - name: Chmod executables
+        shell: bash
+        run: |
+          chmod +x -R ./exe/
+
+      - name: Download Dist
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: dist
+          path: dist/
+
+      - name: Tar Dist
+        run: |
+          tar -czf modern.tgz ./dist/modern
+          tar -czf legacy.tgz ./dist/legacy
+          ls -R ./dist/
+        continue-on-error: true
+
+      - name: Create Release in this repo
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+        with:
+          files: |
+            ./exe/*
+            modern.tgz
+            legacy.tgz
+          generate_release_notes: true
+          # fail_on_unmatched_files: true

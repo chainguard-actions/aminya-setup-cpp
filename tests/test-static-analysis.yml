@@ -1,0 +1,31 @@
+name: Test static analysis tools
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          cppcheck: "true"
+          cpplint: "true"
+          flawfinder: "true"
+          lizard: "true"
+      - name: Assert cppcheck is installed
+        run: |
+          echo "Checking cppcheck installation"
+          if ! command -v cppcheck &>/dev/null; then
+            echo "FAIL: cppcheck not found"
+            exit 1
+          fi
+          echo "PASS: cppcheck found"
+      - name: Assert cpplint is installed
+        run: |
+          echo "Checking cpplint installation"
+          if ! command -v cpplint &>/dev/null; then
+            echo "FAIL: cpplint not found"
+            exit 1
+          fi
+          echo "PASS: cpplint found"

@@ -1,0 +1,21 @@
+name: Test doxygen installation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: setup
+        uses: .
+        with:
+          doxygen: "true"
+      - name: Assert doxygen is installed
+        run: |
+          echo "doxygen version:"
+          doxygen --version
+          if ! doxygen --version; then
+            echo "FAIL: doxygen not found or not working"
+            exit 1
+          fi
+          echo "PASS: doxygen is installed"

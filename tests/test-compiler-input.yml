@@ -1,0 +1,21 @@
+name: Test compiler input shorthand
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: setup
+        uses: .
+        with:
+          compiler: "gcc"
+      - name: Assert gcc is installed via compiler input
+        run: |
+          echo "gcc version:"
+          gcc --version
+          if ! gcc --version; then
+            echo "FAIL: gcc not found or not working"
+            exit 1
+          fi
+          echo "PASS: gcc installed via compiler input"

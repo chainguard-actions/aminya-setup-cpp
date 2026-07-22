@@ -1,0 +1,24 @@
+name: Test cmake tools
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          cmake-format: "true"
+          cmake-lint: "true"
+          cmakeformat: "false"
+          cmakelang: "false"
+          cmakelint: "false"
+      - name: Assert cmake-format is installed
+        run: |
+          echo "Checking cmake-format installation"
+          if ! command -v cmake-format &>/dev/null; then
+            echo "FAIL: cmake-format not found"
+            exit 1
+          fi
+          echo "PASS: cmake-format found"

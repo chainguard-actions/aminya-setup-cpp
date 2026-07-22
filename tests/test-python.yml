@@ -1,0 +1,21 @@
+name: Test python installation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: setup
+        uses: .
+        with:
+          python: "true"
+      - name: Assert python is installed
+        run: |
+          echo "python version:"
+          python3 --version || python --version
+          if ! (python3 --version 2>/dev/null || python --version 2>/dev/null); then
+            echo "FAIL: python not found or not working"
+            exit 1
+          fi
+          echo "PASS: python is installed"

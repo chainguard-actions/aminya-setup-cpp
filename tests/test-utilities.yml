@@ -1,0 +1,39 @@
+name: Test utility tools
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          sccache: "true"
+          sevenzip: "true"
+          tar: "true"
+          git: "true"
+      - name: Assert sccache is installed
+        run: |
+          echo "Checking sccache installation"
+          if ! command -v sccache &>/dev/null; then
+            echo "FAIL: sccache not found"
+            exit 1
+          fi
+          echo "PASS: sccache found"
+      - name: Assert 7z is installed
+        run: |
+          echo "Checking 7z installation"
+          if ! command -v 7z &>/dev/null && ! command -v 7za &>/dev/null && ! command -v 7zz &>/dev/null; then
+            echo "FAIL: 7z not found"
+            exit 1
+          fi
+          echo "PASS: 7z found"
+      - name: Assert git is installed
+        run: |
+          echo "Checking git installation"
+          if ! command -v git &>/dev/null; then
+            echo "FAIL: git not found"
+            exit 1
+          fi
+          echo "PASS: git found"

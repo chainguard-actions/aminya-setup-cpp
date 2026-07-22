@@ -1,0 +1,39 @@
+name: Test build tools
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          make: "true"
+          meson: "true"
+          task: "true"
+          vcpkg: "false"
+      - name: Assert make is installed
+        run: |
+          echo "Checking make installation"
+          if ! command -v make &>/dev/null; then
+            echo "FAIL: make not found"
+            exit 1
+          fi
+          echo "PASS: make found"
+      - name: Assert meson is installed
+        run: |
+          echo "Checking meson installation"
+          if ! command -v meson &>/dev/null; then
+            echo "FAIL: meson not found"
+            exit 1
+          fi
+          echo "PASS: meson found"
+      - name: Assert task is installed
+        run: |
+          echo "Checking task installation"
+          if ! command -v task &>/dev/null; then
+            echo "FAIL: task not found"
+            exit 1
+          fi
+          echo "PASS: task found"
