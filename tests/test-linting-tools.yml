@@ -1,0 +1,43 @@
+name: Test linting and coverage tools (cpplint, flawfinder, lizard, gcovr)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          cpplint: "true"
+          flawfinder: "true"
+          lizard: "true"
+          gcovr: "true"
+      - name: Assert cpplint is installed
+        run: |
+          if ! command -v cpplint &>/dev/null; then
+            echo "FAIL: cpplint not found"
+            exit 1
+          fi
+          echo "PASS: cpplint found at $(command -v cpplint)"
+      - name: Assert flawfinder is installed
+        run: |
+          if ! command -v flawfinder &>/dev/null; then
+            echo "FAIL: flawfinder not found"
+            exit 1
+          fi
+          echo "PASS: flawfinder found at $(command -v flawfinder)"
+      - name: Assert lizard is installed
+        run: |
+          if ! command -v lizard &>/dev/null; then
+            echo "FAIL: lizard not found"
+            exit 1
+          fi
+          echo "PASS: lizard found at $(command -v lizard)"
+      - name: Assert gcovr is installed
+        run: |
+          if ! command -v gcovr &>/dev/null; then
+            echo "FAIL: gcovr not found"
+            exit 1
+          fi
+          echo "PASS: gcovr found at $(command -v gcovr)"

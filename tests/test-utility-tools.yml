@@ -1,0 +1,43 @@
+name: Test utility tools (vcpkg, tar, git, sevenzip)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          vcpkg: "true"
+          tar: "true"
+          git: "true"
+          sevenzip: "true"
+      - name: Assert vcpkg is installed
+        run: |
+          if ! command -v vcpkg &>/dev/null; then
+            echo "FAIL: vcpkg not found"
+            exit 1
+          fi
+          echo "PASS: vcpkg found at $(command -v vcpkg)"
+      - name: Assert tar is installed
+        run: |
+          if ! command -v tar &>/dev/null; then
+            echo "FAIL: tar not found"
+            exit 1
+          fi
+          echo "PASS: tar found at $(command -v tar)"
+      - name: Assert git is installed
+        run: |
+          if ! command -v git &>/dev/null; then
+            echo "FAIL: git not found"
+            exit 1
+          fi
+          echo "PASS: git found at $(command -v git)"
+      - name: Assert 7z is installed
+        run: |
+          if ! command -v 7z &>/dev/null && ! command -v 7za &>/dev/null; then
+            echo "FAIL: 7z/7za not found"
+            exit 1
+          fi
+          echo "PASS: 7z found"

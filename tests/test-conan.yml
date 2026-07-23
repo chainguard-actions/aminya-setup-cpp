@@ -1,0 +1,22 @@
+name: Test conan installation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          conan: "true"
+      - name: Assert conan is installed
+        run: |
+          echo "Checking conan installation..."
+          if ! command -v conan &>/dev/null; then
+            echo "FAIL: conan not found in PATH"
+            exit 1
+          fi
+          CONAN_VERSION=$(conan --version)
+          echo "conan version: $CONAN_VERSION"
+          echo "PASS: conan is installed"

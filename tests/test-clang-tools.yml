@@ -1,4 +1,4 @@
-name: Test clang tools inputs
+name: Test clang tools (clang-format, clang-tidy, llvm)
 on:
   workflow_dispatch:
 jobs:
@@ -9,16 +9,22 @@ jobs:
       - id: action
         uses: .
         with:
-          clang: "true"
-          llvm: "false"
-          clang-tidy: "false"
-          clangtidy: "false"
-          clang-format: "false"
-          clangformat: "false"
-      - name: Assert clang is installed
+          llvm: "true"
+          clang-format: "true"
+          clangformat: "true"
+          clang-tidy: "true"
+          clangtidy: "true"
+      - name: Assert clang-format is installed
         run: |
-          if ! command -v clang &>/dev/null; then
-            echo "FAIL: clang not found in PATH"
+          if ! command -v clang-format &>/dev/null; then
+            echo "FAIL: clang-format not found"
             exit 1
           fi
-          echo "PASS: clang is installed"
+          echo "PASS: clang-format found at $(command -v clang-format)"
+      - name: Assert clang-tidy is installed
+        run: |
+          if ! command -v clang-tidy &>/dev/null; then
+            echo "FAIL: clang-tidy not found"
+            exit 1
+          fi
+          echo "PASS: clang-tidy found at $(command -v clang-tidy)"

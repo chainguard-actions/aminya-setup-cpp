@@ -1,0 +1,30 @@
+name: Test cmake tools (cmake-format, cmake-lint, cmakelang)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          cmake-format: "true"
+          cmakeformat: "true"
+          cmake-lint: "true"
+          cmakelint: "true"
+          cmakelang: "true"
+      - name: Assert cmake-format is installed
+        run: |
+          if ! command -v cmake-format &>/dev/null; then
+            echo "FAIL: cmake-format not found"
+            exit 1
+          fi
+          echo "PASS: cmake-format found at $(command -v cmake-format)"
+      - name: Assert cmake-lint is installed
+        run: |
+          if ! command -v cmake-lint &>/dev/null; then
+            echo "FAIL: cmake-lint not found"
+            exit 1
+          fi
+          echo "PASS: cmake-lint found at $(command -v cmake-lint)"

@@ -1,4 +1,4 @@
-name: Test build tools inputs
+name: Test build tools (make, meson, task, sccache)
 on:
   workflow_dispatch:
 jobs:
@@ -10,14 +10,34 @@ jobs:
         uses: .
         with:
           make: "true"
-          meson: "false"
-          conan: "false"
-          task: "false"
-          vcpkg: "false"
+          meson: "true"
+          task: "true"
+          sccache: "true"
       - name: Assert make is installed
         run: |
           if ! command -v make &>/dev/null; then
-            echo "FAIL: make not found in PATH"
+            echo "FAIL: make not found"
             exit 1
           fi
-          echo "PASS: make is installed"
+          echo "PASS: make found at $(command -v make)"
+      - name: Assert meson is installed
+        run: |
+          if ! command -v meson &>/dev/null; then
+            echo "FAIL: meson not found"
+            exit 1
+          fi
+          echo "PASS: meson found at $(command -v meson)"
+      - name: Assert task is installed
+        run: |
+          if ! command -v task &>/dev/null; then
+            echo "FAIL: task not found"
+            exit 1
+          fi
+          echo "PASS: task found at $(command -v task)"
+      - name: Assert sccache is installed
+        run: |
+          if ! command -v sccache &>/dev/null; then
+            echo "FAIL: sccache not found"
+            exit 1
+          fi
+          echo "PASS: sccache found at $(command -v sccache)"

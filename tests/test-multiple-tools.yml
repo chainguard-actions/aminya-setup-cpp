@@ -1,0 +1,41 @@
+name: Test multiple tools installation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          cmake: "true"
+          ninja: "true"
+          ccache: "true"
+      - name: Assert cmake is installed
+        run: |
+          echo "Checking cmake..."
+          if ! command -v cmake &>/dev/null; then
+            echo "FAIL: cmake not found in PATH"
+            exit 1
+          fi
+          echo "cmake: $(cmake --version | head -1)"
+          echo "PASS: cmake is installed"
+      - name: Assert ninja is installed
+        run: |
+          echo "Checking ninja..."
+          if ! command -v ninja &>/dev/null; then
+            echo "FAIL: ninja not found in PATH"
+            exit 1
+          fi
+          echo "ninja: $(ninja --version)"
+          echo "PASS: ninja is installed"
+      - name: Assert ccache is installed
+        run: |
+          echo "Checking ccache..."
+          if ! command -v ccache &>/dev/null; then
+            echo "FAIL: ccache not found in PATH"
+            exit 1
+          fi
+          echo "ccache: $(ccache --version | head -1)"
+          echo "PASS: ccache is installed"

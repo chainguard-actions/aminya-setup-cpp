@@ -10,11 +10,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
+permissions: {}
+
 env:
   NODE_OPTIONS: --enable-source-maps
   version: "1.8.0"
-
-permissions: {}
 
 jobs:
   Build:
@@ -28,12 +28,12 @@ jobs:
         os:
           - ubuntu-22.04
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Setup Node
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version-file: "./.nvmrc"
 
@@ -57,10 +57,11 @@ jobs:
 
       - name: Update Dist
         env:
-          GIT_REF_NAME: ${{ github.ref_name }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
           if [ "$(git diff --ignore-space-at-eol --text dist/ | wc -l)" -gt "0" ]; then
-            if [[ "$GIT_REF_NAME" =~ ^refs/heads/ ]]; then
+            if [[ "$REF_NAME" =~ ^refs/heads/ ]]; then
               git config user.name "github-actions[bot]"
               git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
@@ -71,8 +72,6 @@ jobs:
               echo "Skipping push for non-branch commit"
             fi
           fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Dist
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -101,7 +100,7 @@ jobs:
           - macos-15-intel # x64
           - macos-14 # arm64
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Download Artifacts
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
@@ -109,7 +108,7 @@ jobs:
           name: dist
 
       - name: Setup Node
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version-file: "./.nvmrc"
 
@@ -182,7 +181,7 @@ jobs:
           - macos-15-intel # x64
           # - macos-14-xlarge #arm64
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           submodules: true
 
@@ -192,7 +191,7 @@ jobs:
           name: dist
 
       - name: Setup Node
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version-file: "./.nvmrc"
 
@@ -227,7 +226,7 @@ jobs:
           RUNNER_OS_NAME: ${{ matrix.os }}
 
       - name: Setup Node 20
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 20
 
@@ -246,7 +245,7 @@ jobs:
 
       - name: Setup Node 12
         if: ${{ !contains(matrix.os, 'macos-14') && !contains(matrix.os, 'macos-15') }}
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 12
       - name: Smoke Test Legacy Bundle
@@ -288,7 +287,7 @@ jobs:
             platform: linux/arm64
             container: { distro: "alpine", image: "setup-cpp-alpine", tag: "3.21", base_version: "22-alpine3.21" }
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           submodules: true
 
@@ -334,11 +333,11 @@ jobs:
         env:
           CONTAINER_IMAGE: ${{ matrix.container.image }}
           CONTAINER_TAG: ${{ matrix.container.tag }}
+          VERSION: ${{ env.version }}
           PLATFORM_SUFFIX: ${{ steps.platform.outputs.suffix }}
-          APP_VERSION: ${{ env.version }}
         run: |
-          docker tag "aminya/${CONTAINER_IMAGE}:${CONTAINER_TAG}-${APP_VERSION}-${PLATFORM_SUFFIX}" "aminya/${CONTAINER_IMAGE}:latest"
-          docker tag "aminya/${CONTAINER_IMAGE}:${CONTAINER_TAG}-${APP_VERSION}-${PLATFORM_SUFFIX}" "aminya/${CONTAINER_IMAGE}:${CONTAINER_TAG}"
+          docker tag "aminya/${CONTAINER_IMAGE}:${CONTAINER_TAG}-${VERSION}-${PLATFORM_SUFFIX}" "aminya/${CONTAINER_IMAGE}:latest"
+          docker tag "aminya/${CONTAINER_IMAGE}:${CONTAINER_TAG}-${VERSION}-${PLATFORM_SUFFIX}" "aminya/${CONTAINER_IMAGE}:${CONTAINER_TAG}"
 
       - name: Push latest to Docker Hub
         if: ${{ github.event_name != 'pull_request' && matrix.container.distro != 'ubuntu' && matrix.container.distro != 'alpine' }}
@@ -378,11 +377,11 @@ jobs:
         env:
           CONTAINER_IMAGE: ${{ matrix.container.image }}
           CONTAINER_TAG: ${{ matrix.container.tag }}
+          VERSION: ${{ env.version }}
           PLATFORM_SUFFIX: ${{ steps.platform.outputs.suffix }}
-          APP_VERSION: ${{ env.version }}
         run: |
-          docker tag "aminya/${CONTAINER_IMAGE}-llvm:${CONTAINER_TAG}-${APP_VERSION}-${PLATFORM_SUFFIX}" "aminya/${CONTAINER_IMAGE}-llvm:latest"
-          docker tag "aminya/${CONTAINER_IMAGE}-llvm:${CONTAINER_TAG}-${APP_VERSION}-${PLATFORM_SUFFIX}" "aminya/${CONTAINER_IMAGE}-llvm:${CONTAINER_TAG}"
+          docker tag "aminya/${CONTAINER_IMAGE}-llvm:${CONTAINER_TAG}-${VERSION}-${PLATFORM_SUFFIX}" "aminya/${CONTAINER_IMAGE}-llvm:latest"
+          docker tag "aminya/${CONTAINER_IMAGE}-llvm:${CONTAINER_TAG}-${VERSION}-${PLATFORM_SUFFIX}" "aminya/${CONTAINER_IMAGE}-llvm:${CONTAINER_TAG}"
 
       - name: Push latest to Docker Hub
         if: ${{ github.event_name != 'pull_request' && matrix.container.distro != 'ubuntu' && matrix.container.distro != 'alpine' && matrix.container.distro != 'arch' }}
@@ -430,11 +429,11 @@ jobs:
         env:
           CONTAINER_IMAGE: ${{ matrix.container.image }}
           CONTAINER_TAG: ${{ matrix.container.tag }}
+          VERSION: ${{ env.version }}
           PLATFORM_SUFFIX: ${{ steps.platform.outputs.suffix }}
-          APP_VERSION: ${{ env.version }}
         run: |
-          docker tag "aminya/${CONTAINER_IMAGE}-gcc:${CONTAINER_TAG}-${APP_VERSION}-${PLATFORM_SUFFIX}" "aminya/${CONTAINER_IMAGE}-gcc:latest"
-          docker tag "aminya/${CONTAINER_IMAGE}-gcc:${CONTAINER_TAG}-${APP_VERSION}-${PLATFORM_SUFFIX}" "aminya/${CONTAINER_IMAGE}-gcc:${CONTAINER_TAG}"
+          docker tag "aminya/${CONTAINER_IMAGE}-gcc:${CONTAINER_TAG}-${VERSION}-${PLATFORM_SUFFIX}" "aminya/${CONTAINER_IMAGE}-gcc:latest"
+          docker tag "aminya/${CONTAINER_IMAGE}-gcc:${CONTAINER_TAG}-${VERSION}-${PLATFORM_SUFFIX}" "aminya/${CONTAINER_IMAGE}-gcc:${CONTAINER_TAG}"
 
       - name: Push latest to Docker Hub
         if: ${{ github.event_name != 'pull_request' && matrix.container.distro != 'ubuntu' && matrix.container.distro != 'alpine' }}
@@ -484,11 +483,11 @@ jobs:
         env:
           CONTAINER_IMAGE: ${{ matrix.container.image }}
           CONTAINER_TAG: ${{ matrix.container.tag }}
+          VERSION: ${{ env.version }}
           PLATFORM_SUFFIX: ${{ steps.platform.outputs.suffix }}
-          APP_VERSION: ${{ env.version }}
         run: |
-          docker tag "aminya/${CONTAINER_IMAGE}-mingw:${CONTAINER_TAG}-${APP_VERSION}-${PLATFORM_SUFFIX}" "aminya/${CONTAINER_IMAGE}-mingw:latest"
-          docker tag "aminya/${CONTAINER_IMAGE}-mingw:${CONTAINER_TAG}-${APP_VERSION}-${PLATFORM_SUFFIX}" "aminya/${CONTAINER_IMAGE}-mingw:${CONTAINER_TAG}"
+          docker tag "aminya/${CONTAINER_IMAGE}-mingw:${CONTAINER_TAG}-${VERSION}-${PLATFORM_SUFFIX}" "aminya/${CONTAINER_IMAGE}-mingw:latest"
+          docker tag "aminya/${CONTAINER_IMAGE}-mingw:${CONTAINER_TAG}-${VERSION}-${PLATFORM_SUFFIX}" "aminya/${CONTAINER_IMAGE}-mingw:${CONTAINER_TAG}"
       - name: Push latest to Docker Hub
         if: ${{ github.event_name != 'pull_request' && matrix.container.distro != 'ubuntu' && matrix.container.distro != 'fedora' && matrix.container.distro != 'alpine' }}
         env:
