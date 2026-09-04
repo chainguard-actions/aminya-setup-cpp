@@ -1,0 +1,73 @@
+schemaVersion: 2.0.0
+
+commandTests:
+  - name: cmake
+    command: bash
+    args: ["-l", "-c", "cmake --version"]
+    expectedOutput: [".*3.*"]
+  - name: ninja
+    command: bash
+    args: ["-l", "-c", "ninja --version"]
+    expectedOutput: [".*1.*"]
+  - name: task
+    command: bash
+    args: ["-l", "-c", "task --version"]
+    expectedOutput: [".*Task version:\\s*v3.*"]
+  - name: python
+    command: bash
+    args: ["-l", "-c", "python --version"]
+    expectedOutput: [".*Python.*"]
+  - name: python3
+    command: bash
+    args: ["-l", "-c", "python3 --version"]
+    expectedOutput: [".*Python.*"]
+  - name: make
+    command: bash
+    args: ["-l", "-c", "make --version"]
+    expectedOutput: [".*GNU Make.*"]
+  - name: cppcheck
+    command: bash
+    args: ["-l", "-c", "cppcheck --version"]
+    expectedOutput: [".*"]
+  - name: gcovr
+    command: bash
+    args: ["-l", "-c", "gcovr --version"]
+    expectedOutput: [".*gcovr.*"]
+  - name: doxygen
+    command: bash
+    args: ["-l", "-c", "doxygen --version"]
+    expectedOutput: [".*1.*"]
+  - name: ccache
+    command: bash
+    args: ["-l", "-c", "ccache --version"]
+    expectedOutput: [".*"]
+  - name: conan
+    command: bash
+    args: ["-l", "-c", "conan --version"]
+    expectedOutput: [".*"]
+  - name: meson
+    command: bash
+    args: ["-l", "-c", "meson --version"]
+    expectedOutput: [".*"]
+  - name: cmake-format
+    command: bash
+    args: ["-l", "-c", "cmake-format --version"]
+    expectedOutput: [".*"]
+  - name: cmake-lint
+    command: bash
+    args: ["-l", "-c", "cmake-lint --version"]
+    expectedOutput: [".*"]
+
+fileExistenceTests:
+  - name: "vcpkg"
+    path: "/root/vcpkg"
+    shouldExist: true
+  - name: "ninja"
+    path: "/root/ninja"
+    shouldExist: true
+  - name: "cmake"
+    path: "/root/cmake"
+    shouldExist: true
+  - name: "task"
+    path: "/root/task"
+    shouldExist: true

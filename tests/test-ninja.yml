@@ -1,0 +1,22 @@
+name: Test ninja installation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          ninja: "true"
+      - name: Assert ninja is installed
+        run: |
+          echo "Checking ninja installation..."
+          if ! command -v ninja &>/dev/null; then
+            echo "FAIL: ninja not found in PATH"
+            exit 1
+          fi
+          NINJA_VERSION=$(ninja --version)
+          echo "ninja version: $NINJA_VERSION"
+          echo "PASS: ninja is installed"

@@ -1,0 +1,32 @@
+name: Test gcc installation via compiler input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          compiler: "gcc"
+      - name: Assert gcc is available
+        run: |
+          echo "Checking gcc installation..."
+          if ! command -v gcc &>/dev/null; then
+            echo "FAIL: gcc not found in PATH"
+            exit 1
+          fi
+          GCC_VERSION=$(gcc --version | head -1)
+          echo "gcc version: $GCC_VERSION"
+          echo "PASS: gcc is available"
+      - name: Assert g++ is available
+        run: |
+          echo "Checking g++ installation..."
+          if ! command -v g++ &>/dev/null; then
+            echo "FAIL: g++ not found in PATH"
+            exit 1
+          fi
+          GPP_VERSION=$(g++ --version | head -1)
+          echo "g++ version: $GPP_VERSION"
+          echo "PASS: g++ is available"

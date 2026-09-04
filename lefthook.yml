@@ -1,0 +1,7 @@
+pre-commit:
+  parallel: false
+  commands:
+    test.lint:
+      run: bun run test.lint
+    build:
+      run: bun run build -- --no-color && git add ./dist

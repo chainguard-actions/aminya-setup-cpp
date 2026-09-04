@@ -1,0 +1,56 @@
+{
+  "name": "setup-alpine",
+  "version": "1.1.0",
+  "description": "Setup apk packages and repositories in Alpine Linux distributions",
+  "repository": "https://github.com/aminya/setup-cpp",
+  "homepage": "https://github.com/aminya/setup-cpp/tree/master/packages/setup-alpine",
+  "license": "Apache-2.0",
+  "author": "Amin Yahyaabadi",
+  "main": "./dist/index.js",
+  "source": "./src/index.ts",
+  "type": "module",
+  "files": [
+    "dist",
+    "src",
+    "tsconfig.json"
+  ],
+  "scripts": {
+    "build": "tsc --pretty",
+    "dev": "tsc --watch --pretty",
+    "lint.tsc.test": "tsc --noEmit --pretty -p ./__tests__/tsconfig.json",
+    "lint.tsc": "tsc --noEmit --pretty",
+    "lint.eslint": "eslint '**/*.{ts,tsx,js,jsx,cjs,mjs,json,yaml}' --no-error-on-unmatched-pattern --cache --cache-location ./.cache/eslint/ --fix",
+    "prepublishOnly": "pnpm run build",
+    "test": "jest --coverage"
+  },
+  "dependencies": {
+    "@types/node": "25.0.9",
+    "admina": "^1.0.1",
+    "path-exists": "^5.0.0",
+    "ci-log": "workspace:*",
+    "envosman": "workspace:*",
+    "which": "4.0.0",
+    "execa": "7.2.0",
+    "memoizee": "^0.4.17"
+  },
+  "engines": {
+    "node": ">=12"
+  },
+  "keywords": [
+    "setup",
+    "apk",
+    "apk-add",
+    "repository",
+    "alpine",
+    "install",
+    "setup-apk",
+    "repositories",
+    "linux",
+    "alpine-linux",
+    "package"
+  ],
+  "devDependencies": {
+    "@types/memoizee": "0.4.12",
+    "@types/which": "~3.0.4"
+  }
+}
