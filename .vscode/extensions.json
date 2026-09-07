@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "orta.vscode-jest",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "biomejs.biome",
+    "p42ai.refactor"
+  ]
+}

@@ -1,0 +1,35 @@
+name: Test coverage and documentation tools
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          gcovr: "true"
+          doxygen: "true"
+          graphviz: "true"
+      - name: Assert gcovr is installed
+        run: |
+          if ! command -v gcovr &>/dev/null; then
+            echo "FAIL: gcovr not found in PATH"
+            exit 1
+          fi
+          echo "PASS: gcovr found"
+      - name: Assert doxygen is installed
+        run: |
+          if ! command -v doxygen &>/dev/null; then
+            echo "FAIL: doxygen not found in PATH"
+            exit 1
+          fi
+          echo "PASS: doxygen found"
+      - name: Assert graphviz (dot) is installed
+        run: |
+          if ! command -v dot &>/dev/null; then
+            echo "FAIL: graphviz dot not found in PATH"
+            exit 1
+          fi
+          echo "PASS: graphviz dot found"

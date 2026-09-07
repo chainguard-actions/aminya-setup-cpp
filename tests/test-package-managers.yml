@@ -1,0 +1,27 @@
+name: Test package managers
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          vcpkg: "true"
+          nala: "true"
+      - name: Assert vcpkg is installed
+        run: |
+          if ! command -v vcpkg &>/dev/null; then
+            echo "FAIL: vcpkg not found in PATH"
+            exit 1
+          fi
+          echo "PASS: vcpkg found"
+      - name: Assert nala is installed
+        run: |
+          if ! command -v nala &>/dev/null; then
+            echo "FAIL: nala not found in PATH"
+            exit 1
+          fi
+          echo "PASS: nala found"

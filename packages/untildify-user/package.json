@@ -1,0 +1,37 @@
+{
+  "name": "untildify-user",
+  "version": "1.0.1",
+  "description": "Untildify a path for the current user even if it is root",
+  "repository": "https://github.com/aminya/setup-cpp",
+  "homepage": "https://github.com/aminya/setup-cpp/tree/master/packages/untildify-user",
+  "license": "Apache-2.0",
+  "author": "Amin Yahyaabadi",
+  "main": "./dist/index.js",
+  "source": "./src/index.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --pretty",
+    "dev": "tsc --watch --pretty",
+    "lint.tsc.test": "tsc --noEmit --pretty -p ./__tests__/tsconfig.json",
+    "lint.tsc": "tsc --noEmit --pretty",
+    "lint.eslint": "eslint '**/*.{ts,tsx,js,jsx,cjs,mjs,json,yaml}' --no-error-on-unmatched-pattern --cache --cache-location ./.cache/eslint/ --fix",
+    "prepublishOnly": "pnpm run build",
+    "test": "jest --coverage"
+  },
+  "dependencies": {
+    "admina": "1.0.1"
+  },
+  "keywords": [
+    "tilde",
+    "expansion",
+    "expand",
+    "untildify",
+    "path",
+    "home",
+    "directory",
+    "user",
+    "shell",
+    "bash"
+  ],
+  "devDependencies": {}
+}

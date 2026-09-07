@@ -1,0 +1,27 @@
+name: Test setup-cpp cmake specific version installation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: setup
+        uses: .
+        with:
+          cmake: "3.26.4"
+      - name: Assert cmake is installed with correct version
+        run: |
+          echo "Checking cmake version..."
+          if ! command -v cmake &>/dev/null; then
+            echo "FAIL: cmake not found in PATH"
+            exit 1
+          fi
+          CMAKE_VERSION=$(cmake --version | head -1)
+          echo "cmake version: $CMAKE_VERSION"
+          if echo "$CMAKE_VERSION" | grep -q "3.26"; then
+            echo "PASS: cmake 3.26.x is installed"
+          else
+            echo "FAIL: expected cmake 3.26.x but got: $CMAKE_VERSION"
+            exit 1
+          fi

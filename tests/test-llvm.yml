@@ -1,0 +1,33 @@
+name: Test setup-cpp llvm/clang installation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: setup
+        uses: .
+        with:
+          llvm: "true"
+          clang-format: "true"
+          clang-tidy: "true"
+      - name: Assert clang is installed
+        run: |
+          echo "Checking clang installation..."
+          if ! command -v clang &>/dev/null && ! command -v clang-* &>/dev/null; then
+            echo "FAIL: clang not found in PATH"
+            exit 1
+          fi
+          CLANG_VERSION=$(clang --version | head -1 || clang-* --version 2>/dev/null | head -1)
+          echo "clang version: $CLANG_VERSION"
+          echo "PASS: clang is installed"
+      - name: Assert clang++ is installed
+        run: |
+          echo "Checking clang++ installation..."
+          if ! command -v clang++ &>/dev/null; then
+            echo "FAIL: clang++ not found in PATH"
+            exit 1
+          fi
+          echo "clang++: $(clang++ --version | head -1)"
+          echo "PASS: clang++ is installed"

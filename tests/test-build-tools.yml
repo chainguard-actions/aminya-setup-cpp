@@ -1,0 +1,51 @@
+name: Test build tools
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          make: "true"
+          conan: "true"
+          meson: "true"
+          task: "true"
+          autoreconf: "true"
+      - name: Assert make is installed
+        run: |
+          if ! command -v make &>/dev/null; then
+            echo "FAIL: make not found in PATH"
+            exit 1
+          fi
+          echo "PASS: make found"
+      - name: Assert conan is installed
+        run: |
+          if ! command -v conan &>/dev/null; then
+            echo "FAIL: conan not found in PATH"
+            exit 1
+          fi
+          echo "PASS: conan found"
+      - name: Assert meson is installed
+        run: |
+          if ! command -v meson &>/dev/null; then
+            echo "FAIL: meson not found in PATH"
+            exit 1
+          fi
+          echo "PASS: meson found"
+      - name: Assert task is installed
+        run: |
+          if ! command -v task &>/dev/null; then
+            echo "FAIL: task not found in PATH"
+            exit 1
+          fi
+          echo "PASS: task found"
+      - name: Assert autoreconf is installed
+        run: |
+          if ! command -v autoreconf &>/dev/null; then
+            echo "FAIL: autoreconf not found in PATH"
+            exit 1
+          fi
+          echo "PASS: autoreconf found"

@@ -1,0 +1,45 @@
+name: Test miscellaneous tools
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          python: "true"
+          git: "true"
+          tar: "true"
+          sevenzip: "true"
+          powershell: "false"
+          pwsh: "false"
+      - name: Assert python is installed
+        run: |
+          if ! command -v python3 &>/dev/null && ! command -v python &>/dev/null; then
+            echo "FAIL: python not found in PATH"
+            exit 1
+          fi
+          echo "PASS: python found"
+      - name: Assert git is installed
+        run: |
+          if ! command -v git &>/dev/null; then
+            echo "FAIL: git not found in PATH"
+            exit 1
+          fi
+          echo "PASS: git found"
+      - name: Assert tar is installed
+        run: |
+          if ! command -v tar &>/dev/null; then
+            echo "FAIL: tar not found in PATH"
+            exit 1
+          fi
+          echo "PASS: tar found"
+      - name: Assert 7z is installed
+        run: |
+          if ! command -v 7z &>/dev/null && ! command -v 7za &>/dev/null; then
+            echo "FAIL: 7z not found in PATH"
+            exit 1
+          fi
+          echo "PASS: 7z found"

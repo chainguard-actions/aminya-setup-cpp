@@ -1,0 +1,37 @@
+name: Test clang tools
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          clang: "true"
+          clang-tidy: "true"
+          clangtidy: "false"
+          clang-format: "true"
+          clangformat: "false"
+      - name: Assert clang is installed
+        run: |
+          if ! command -v clang &>/dev/null && ! command -v clang-* &>/dev/null; then
+            echo "FAIL: clang not found in PATH"
+            exit 1
+          fi
+          echo "PASS: clang found"
+      - name: Assert clang-tidy is installed
+        run: |
+          if ! command -v clang-tidy &>/dev/null; then
+            echo "FAIL: clang-tidy not found in PATH"
+            exit 1
+          fi
+          echo "PASS: clang-tidy found"
+      - name: Assert clang-format is installed
+        run: |
+          if ! command -v clang-format &>/dev/null; then
+            echo "FAIL: clang-format not found in PATH"
+            exit 1
+          fi
+          echo "PASS: clang-format found"
