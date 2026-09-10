@@ -1,0 +1,30 @@
+name: Test clang analysis tools (clang-tidy, clangformat)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          clang-tidy: "true"
+          clangtidy: "true"
+          clangformat: "true"
+      - name: Assert clang-tidy is available
+        run: |
+          echo "Checking clang-tidy..."
+          if ! command -v clang-tidy &>/dev/null; then
+            echo "FAIL: clang-tidy not found"
+            exit 1
+          fi
+          echo "PASS: clang-tidy found at $(command -v clang-tidy)"
+      - name: Assert clang-format is available
+        run: |
+          echo "Checking clang-format..."
+          if ! command -v clang-format &>/dev/null; then
+            echo "FAIL: clang-format not found"
+            exit 1
+          fi
+          echo "PASS: clang-format found at $(command -v clang-format)"

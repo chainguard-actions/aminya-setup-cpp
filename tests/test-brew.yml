@@ -1,0 +1,20 @@
+name: Test brew installation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          brew: "true"
+      - name: Assert brew is available
+        run: |
+          echo "Checking brew..."
+          if ! command -v brew &>/dev/null; then
+            echo "FAIL: brew not found"
+            exit 1
+          fi
+          echo "PASS: brew found at $(command -v brew)"

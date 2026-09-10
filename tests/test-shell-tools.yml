@@ -1,0 +1,30 @@
+name: Test shell and scripting tools (powershell, pwsh, nala)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          powershell: "true"
+          pwsh: "true"
+          nala: "true"
+      - name: Assert powershell is available
+        run: |
+          echo "Checking powershell/pwsh..."
+          if ! command -v pwsh &>/dev/null && ! command -v powershell &>/dev/null; then
+            echo "FAIL: powershell/pwsh not found"
+            exit 1
+          fi
+          echo "PASS: powershell found"
+      - name: Assert nala is available
+        run: |
+          echo "Checking nala..."
+          if ! command -v nala &>/dev/null; then
+            echo "FAIL: nala not found"
+            exit 1
+          fi
+          echo "PASS: nala found at $(command -v nala)"

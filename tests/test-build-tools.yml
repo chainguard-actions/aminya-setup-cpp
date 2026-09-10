@@ -1,0 +1,39 @@
+name: Test build tools (make, autoreconf, meson, task)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          make: "true"
+          autoreconf: "true"
+          meson: "true"
+          task: "true"
+      - name: Assert make is available
+        run: |
+          echo "Checking make..."
+          if ! command -v make &>/dev/null; then
+            echo "FAIL: make not found"
+            exit 1
+          fi
+          echo "PASS: make found at $(command -v make)"
+      - name: Assert meson is available
+        run: |
+          echo "Checking meson..."
+          if ! command -v meson &>/dev/null; then
+            echo "FAIL: meson not found"
+            exit 1
+          fi
+          echo "PASS: meson found at $(command -v meson)"
+      - name: Assert task is available
+        run: |
+          echo "Checking task..."
+          if ! command -v task &>/dev/null; then
+            echo "FAIL: task not found"
+            exit 1
+          fi
+          echo "PASS: task found at $(command -v task)"

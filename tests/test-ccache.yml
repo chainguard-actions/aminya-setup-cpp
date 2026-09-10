@@ -1,0 +1,22 @@
+name: Test ccache installation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: setup
+        uses: .
+        with:
+          ccache: "true"
+      - name: Assert ccache is installed
+        run: |
+          echo "Checking ccache installation..."
+          if ! command -v ccache &>/dev/null; then
+            echo "FAIL: ccache not found in PATH"
+            exit 1
+          fi
+          CCACHE_VERSION=$(ccache --version | head -1)
+          echo "ccache version: $CCACHE_VERSION"
+          echo "PASS: ccache is installed"

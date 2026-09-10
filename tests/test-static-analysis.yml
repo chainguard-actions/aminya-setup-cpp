@@ -1,0 +1,30 @@
+name: Test static analysis tools (flawfinder, lizard, infer)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          flawfinder: "true"
+          lizard: "true"
+          infer: "true"
+      - name: Assert flawfinder is available
+        run: |
+          echo "Checking flawfinder..."
+          if ! command -v flawfinder &>/dev/null; then
+            echo "FAIL: flawfinder not found"
+            exit 1
+          fi
+          echo "PASS: flawfinder found at $(command -v flawfinder)"
+      - name: Assert lizard is available
+        run: |
+          echo "Checking lizard..."
+          if ! command -v lizard &>/dev/null; then
+            echo "FAIL: lizard not found"
+            exit 1
+          fi
+          echo "PASS: lizard found at $(command -v lizard)"

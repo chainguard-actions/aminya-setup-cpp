@@ -1,0 +1,54 @@
+import { execRoot } from "admina"
+import { hasApk, installApkPack } from "setup-alpine"
+import { addAptKeyViaURL, hasAptGet, installAptPack } from "setup-apt"
+import { installBrewPack } from "setup-brew"
+import { hasDnf, setupDnfPack } from "setup-dnf"
+import { isArch } from "setup-pacman"
+import type { SetupOptions } from "../setup-options.js"
+import { getDebArch } from "../utils/env/arch.js"
+import { setupChocoPack } from "../utils/setup-choco.js"
+
+export async function setupBazel({ version }: Partial<Pick<SetupOptions, "version">> = {}) {
+  switch (process.platform) {
+    case "win32": {
+      // install bazelisk because it contains both
+      return setupChocoPack("bazelisk", version)
+    }
+    case "darwin": {
+      // install bazelisk because it contains both
+      return installBrewPack("bazelisk", version)
+    }
+    case "linux": {
+      if (isArch()) {
+        throw new Error("installing bazel on Arch linux is not supported yet")
+      } else if (hasDnf()) {
+        // https://bazel.build/install/redhat
+        await setupDnfPack([{ name: "dnf-plugins-core" }])
+        await execRoot("dnf", ["copr", "enable", "vbatts/bazel"])
+        return setupDnfPack([{ name: "bazel4" }])
+      } else if (hasAptGet()) {
+        // https://bazel.build/install/ubuntu
+        const keyFileName = await addAptKeyViaURL({
+          fileName: "bazel-archive-keyring.gpg",
+          keyUrl: "https://releases.bazel.build/bazel-release.pub.gpg",
+        })
+        if (keyFileName === undefined) {
+          throw new Error("Failed to add the Bazel apt key")
+        }
+        await execRoot("bash", [
+          "-c",
+          `echo "deb [arch=${
+            getDebArch(process.arch)
+          } signed-by=${keyFileName}] https://storage.googleapis.com/bazel-apt stable jdk1.8" | tee /etc/apt/sources.list.d/bazel.list`,
+        ])
+        return installAptPack([{ name: "bazel", version }], true)
+      } else if (await hasApk()) {
+        return installApkPack([{ name: "bazel", version }], true)
+      }
+      throw new Error("Unsupported linux distribution")
+    }
+    default: {
+      throw new Error("Unsupported platform")
+    }
+  }
+}

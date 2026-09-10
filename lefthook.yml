@@ -1,0 +1,8 @@
+pre-commit:
+  parallel: false
+  commands:
+    lint:
+      run: bun run lint
+      stage_fixed: true
+    build:
+      run: bun run build -- --no-color && git add ./dist

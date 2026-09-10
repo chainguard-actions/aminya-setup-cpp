@@ -1,0 +1,20 @@
+name: Test Apple/macOS-specific inputs (apple-clang, apple-llvm, appleclang, applellvm)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      # These inputs are macOS-only; on Linux the action should skip them gracefully.
+      # We pass them to ensure input coverage, and verify the action completes without error.
+      - id: action
+        uses: .
+        with:
+          apple-clang: "true"
+          apple-llvm: "true"
+          appleclang: "true"
+          applellvm: "true"
+      - name: Assert action completed (Apple tools skipped on Linux)
+        run: |
+          echo "PASS: action completed without error (Apple-only tools are skipped on Linux)"

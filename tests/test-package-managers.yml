@@ -1,0 +1,29 @@
+name: Test package managers (conan, vcpkg)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          conan: "true"
+          vcpkg: "true"
+      - name: Assert conan is available
+        run: |
+          echo "Checking conan..."
+          if ! command -v conan &>/dev/null; then
+            echo "FAIL: conan not found"
+            exit 1
+          fi
+          echo "PASS: conan found at $(command -v conan)"
+      - name: Assert vcpkg is available
+        run: |
+          echo "Checking vcpkg..."
+          if ! command -v vcpkg &>/dev/null; then
+            echo "FAIL: vcpkg not found"
+            exit 1
+          fi
+          echo "PASS: vcpkg found at $(command -v vcpkg)"

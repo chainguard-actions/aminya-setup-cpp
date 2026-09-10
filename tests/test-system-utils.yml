@@ -1,0 +1,47 @@
+name: Test system utilities (python, git, tar, sevenzip)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          python: "true"
+          git: "true"
+          tar: "true"
+          sevenzip: "true"
+      - name: Assert python is available
+        run: |
+          echo "Checking python..."
+          if ! command -v python3 &>/dev/null && ! command -v python &>/dev/null; then
+            echo "FAIL: python not found"
+            exit 1
+          fi
+          echo "PASS: python found"
+      - name: Assert git is available
+        run: |
+          echo "Checking git..."
+          if ! command -v git &>/dev/null; then
+            echo "FAIL: git not found"
+            exit 1
+          fi
+          echo "PASS: git found at $(command -v git)"
+      - name: Assert tar is available
+        run: |
+          echo "Checking tar..."
+          if ! command -v tar &>/dev/null; then
+            echo "FAIL: tar not found"
+            exit 1
+          fi
+          echo "PASS: tar found at $(command -v tar)"
+      - name: Assert 7z is available
+        run: |
+          echo "Checking 7z..."
+          if ! command -v 7z &>/dev/null && ! command -v 7za &>/dev/null; then
+            echo "FAIL: 7z not found"
+            exit 1
+          fi
+          echo "PASS: 7z found"

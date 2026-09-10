@@ -1,0 +1,30 @@
+name: Test compiler tools (gcc, clang, llvm)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          gcc: "true"
+          clang: "true"
+          llvm: "true"
+      - name: Assert gcc is available
+        run: |
+          echo "Checking gcc..."
+          if ! command -v gcc &>/dev/null; then
+            echo "FAIL: gcc not found"
+            exit 1
+          fi
+          echo "PASS: gcc found at $(command -v gcc)"
+      - name: Assert clang is available
+        run: |
+          echo "Checking clang..."
+          if ! command -v clang &>/dev/null; then
+            echo "FAIL: clang not found"
+            exit 1
+          fi
+          echo "PASS: clang found at $(command -v clang)"

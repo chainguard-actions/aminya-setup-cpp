@@ -1,0 +1,23 @@
+name: Test Windows-specific inputs (cl, msvc, msbuild, visualstudio, vcvarsall, choco, opencppcoverage)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      # These inputs are Windows-only; on Linux the action should skip them gracefully.
+      # We pass them to ensure input coverage, and verify the action completes without error.
+      - id: action
+        uses: .
+        with:
+          cl: "true"
+          msvc: "true"
+          msbuild: "true"
+          visualstudio: "true"
+          vcvarsall: "true"
+          choco: "true"
+          opencppcoverage: "true"
+      - name: Assert action completed (Windows tools skipped on Linux)
+        run: |
+          echo "PASS: action completed without error (Windows-only tools are skipped on Linux)"

@@ -1,0 +1,12 @@
+import type { InstallationInfo } from "setup-bin"
+import { testBin } from "../../utils/tests/test-helpers.js"
+import { setupMake } from "../make.js"
+
+jest.setTimeout(300000)
+describe("setup-make", () => {
+  it("should setup make", async () => {
+    const installInfo = await setupMake()
+
+    await testBin("make", ["--version"], (installInfo as InstallationInfo | undefined)?.binDir)
+  })
+})

@@ -1,0 +1,37 @@
+name: Test clang-format installation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: setup
+        uses: .
+        with:
+          clang-format: "true"
+      - name: Assert clang-format is installed
+        run: |
+          echo "Checking clang-format installation..."
+          if ! command -v clang-format &>/dev/null; then
+            echo "FAIL: clang-format not found in PATH"
+            exit 1
+          fi
+          CLANGFMT_VERSION=$(clang-format --version)
+          echo "clang-format version: $CLANGFMT_VERSION"
+          echo "PASS: clang-format is installed"
+      - name: Assert clang-format can format code
+        run: |
+          echo "Testing clang-format on a sample C++ file..."
+          cat > /tmp/test.cpp <<'EOF'
+          #include <iostream>
+          int main(){std::cout<<"Hello"<<std::endl;return 0;}
+          EOF
+          FORMATTED=$(clang-format /tmp/test.cpp)
+          echo "Formatted output:"
+          echo "$FORMATTED"
+          if [ -z "$FORMATTED" ]; then
+            echo "FAIL: clang-format produced empty output"
+            exit 1
+          fi
+          echo "PASS: clang-format formatted the file successfully"
