@@ -4,8 +4,13 @@
   "version": "v1.9.1",
   "commit_sha": "c4e5daa333e7b32a6d1d5e462bede4e1f98435b7",
   "url": "https://github.com/aminya/setup-cpp",
-  "policy_sha": "d636be7e43ef829af6e853da6b3c7566db9f72fe",
+  "policy_sha": "374911c4be584df24e6da57af2d990570ef0f859",
   "test_policy_sha": "843adf9e4b8f85d0c08b27b9d0b09dd094b54702",
   "test_agent_version": "2",
-  "harden_agent_version": "2"
+  "harden_agent_version": "2",
+  "dist_artifact": {
+    "gcs_uri": "gs://patch-actions-node-artifacts/dist-artifacts/aminya/setup-cpp/v1.9.1/sha256-7fc856f3f8ec4606f839986f68f0b47c1d595b1483d70754fd8ce1eeef781cff.tar.gz",
+    "sha256": "7fc856f3f8ec4606f839986f68f0b47c1d595b1483d70754fd8ce1eeef781cff",
+    "size_bytes": 2760027
+  }
 }
